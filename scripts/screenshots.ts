@@ -4,14 +4,15 @@
 //
 // Starts its own dev server and drives the installed Google Chrome. The API
 // is faked, so this never calls OpenAI and doesn't need an API key.
-// Screenshots go in screenshots/ (gitignored).
+// Each run saves to its own timestamped folder in screenshots/ (gitignored),
+// e.g. screenshots/2026-10-02_18-55-12/.
 
-import { mkdir, rm } from "node:fs/promises"
+import { mkdir } from "node:fs/promises"
 import { chromium, type Page } from "playwright-core"
 import { createServer } from "vite"
 import type { ProcessResponse } from "../src/types"
 
-const OUT_DIR = "screenshots"
+const OUT_DIR = `screenshots/${timestamp(new Date())}`
 const PORT = 5299
 const VIEWPORT = { width: 390, height: 844 } // a typical phone
 
@@ -31,8 +32,7 @@ const exampleResponse: ProcessResponse = {
 }
 
 async function main() {
-  await rm(OUT_DIR, { recursive: true, force: true })
-  await mkdir(OUT_DIR)
+  await mkdir(OUT_DIR, { recursive: true })
 
   const server = await createServer({
     server: { port: PORT, strictPort: true },
@@ -63,7 +63,7 @@ async function main() {
     await shoot(page, "01-home", "Record an event")
     await page.getByText("Record an event").click()
     await shoot(page, "02-recording", "Recording…")
-    await page.getByRole("button", { name: "Stop recording" }).click()
+    await page.getByRole("button", { name: "Save recording" }).click()
     await shoot(page, "03-processing", "Processing…")
     releaseProcessing()
     await shoot(page, "04-review", "Is this right?")
@@ -76,7 +76,7 @@ async function main() {
     await page.route("**/api/process", (route) => route.fulfill({ status: 500 }))
     await page.goto(baseUrl)
     await page.getByText("Record an event").click()
-    await page.getByRole("button", { name: "Stop recording" }).click()
+    await page.getByRole("button", { name: "Save recording" }).click()
     await shoot(page, "06-review-no-transcript", "Is this right?")
     await browser.close()
 
@@ -117,6 +117,15 @@ async function shoot(page: Page, name: string, text: string) {
     animations: "disabled",
   })
   console.log(`  ${name}.png`)
+}
+
+// e.g. "2026-10-02_18-55-12", in local time.
+function timestamp(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0")
+  return (
+    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}_` +
+    `${pad(date.getHours())}-${pad(date.getMinutes())}-${pad(date.getSeconds())}`
+  )
 }
 
 // A mono 8 kHz WAV file of silence.

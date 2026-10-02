@@ -24,7 +24,7 @@ seizure-diary-proto-02/
 ├── components.json           # shadcn/ui config
 ├── scripts/
 │   └── screenshots.ts        # `npm run screenshots`: phone-sized shot of every screen
-├── screenshots/              # Output of the above (gitignored)
+├── screenshots/              # Output of the above, one timestamped folder per run (gitignored)
 │
 ├── src/                      # Front end (React)
 │   ├── main.tsx              # Mounts the app

@@ -28,7 +28,7 @@ R2 is simulated locally, so no Cloudflare account is needed to run it.
 npm run screenshots
 ```
 
-Saves a phone-sized screenshot of every screen to `screenshots/`, using example data. It needs Google Chrome installed, but no API key, and it never calls OpenAI.
+Saves a phone-sized screenshot of every screen to a new timestamped folder in `screenshots/` (e.g. `screenshots/2026-10-02_18-56-32/`), using example data. It needs Google Chrome installed, but no API key, and it never calls OpenAI.
 
 ## Deploying
 
