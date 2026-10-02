@@ -16,7 +16,7 @@ flowchart LR
         api -- "read / write events" --> db
     end
 
-    stt["🗣️ Speech-to-Text &<br/>Event Extraction<br/>(AI service, TBC)"]
+    stt["🗣️ OpenAI<br/>Whisper + LLM"]
     eeg["🧠 EEG Headset<br/>(separate system)"]
 
     patient -- "speaks about an event,<br/>reviews & confirms" --> app
@@ -37,7 +37,7 @@ flowchart LR
 | **Seizure Diary App** | React + TypeScript + Vite front end, styled with Tailwind / shadcn/ui and using Lucide icons. It records audio, shows the draft event for review and saves it on confirmation. |
 | **Seizure Diary API** | Cloudflare Worker. It receives the audio, sends it for transcription and extraction, and stores confirmed events. |
 | **Event Store** | Cloudflare D1 (SQLite). Holds timestamped events. |
-| **Speech-to-Text & Event Extraction** | Turns speech into a transcript and a structured event (type, time, notes). The provider isn't decided yet; Cloudflare Workers AI (Whisper plus an LLM) would keep everything on Cloudflare. |
+| **OpenAI** | Whisper turns speech into a transcript. A cheaper LLM then turns that into a structured event (type, time, notes), which the API validates with Zod. |
 | **EEG Headset** | Records brain activity continuously. It is a separate system with no direct integration. |
 | **Clinician** | Reads the EEG alongside the event log, matching them up by timestamp. |
 
@@ -53,7 +53,6 @@ Solid lines are in scope for this spike. Dotted lines are context: they show how
 
 ## Open questions
 
-- **Speech-to-text provider:** Workers AI, or an external service? Patient voice data is sensitive, so NHS data-handling and residency rules apply.
 - **Clinician access:** how does the event log reach the clinical team (export, dashboard, sent with the EEG data)?
 - **Patient identity:** how is an event tied to a patient and their EEG session (e.g. a session code given out with the headset)?
 - **Timestamps:** should an event use the time it was recorded, or a time the patient states ("about 10 minutes ago")? This matters for matching events against the EEG.
