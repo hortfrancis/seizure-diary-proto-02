@@ -2,10 +2,10 @@ import { CircleCheckIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { formatEventTime } from "@/lib/format"
-import { eventTypeLabels, type DiaryEvent } from "@/types"
+import { eventTypeLabels, type DraftEvent } from "@/types"
 
 type Props = {
-  event: DiaryEvent
+  event: DraftEvent
   onDone: () => void
 }
 
@@ -18,7 +18,7 @@ export function SavedScreen({ event, onDone }: Props) {
       <Card className="w-full">
         <CardContent className="flex flex-col gap-4 text-lg">
           <Field label="Event" value={eventTypeLabels[event.type]} />
-          <Field label="Time" value={formatEventTime(event.time)} />
+          <Field label="Time" value={formatEventTime(new Date(event.datetime))} />
           {event.notes && <Field label="Notes" value={event.notes} />}
         </CardContent>
       </Card>

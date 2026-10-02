@@ -1,5 +1,8 @@
 import OpenAI from "openai"
+import { z } from "zod"
+import { createDraftEvent } from "../src/lib/draft"
 import type { ProcessResponse } from "../src/types"
+import { extractEvent } from "./extract"
 
 // OpenAI's limit for audio uploads.
 const MAX_AUDIO_BYTES = 25 * 1024 * 1024
@@ -22,12 +25,20 @@ export default {
   },
 } satisfies ExportedHandler<Env>
 
-// Saves the audio to R2, then transcribes it.
+// Saves the audio to R2, transcribes it, then has the LLM turn the
+// transcript into a draft event.
 async function processRecording(request: Request, env: Env): Promise<Response> {
   const form = await request.formData()
   const audio = form.get("audio")
   if (!(audio instanceof File) || audio.size === 0) {
     return new Response("Missing audio", { status: 400 })
+  }
+  // Local time with UTC offset, e.g. "2026-10-02T18:10:00+01:00".
+  const recordedAtLocal = z.iso
+    .datetime({ offset: true })
+    .safeParse(form.get("recordedAt"))
+  if (!recordedAtLocal.success) {
+    return new Response("Missing or invalid recordedAt", { status: 400 })
   }
   if (audio.size > MAX_AUDIO_BYTES) {
     return new Response("Audio too large", { status: 413 })
@@ -41,11 +52,11 @@ async function processRecording(request: Request, env: Env): Promise<Response> {
     httpMetadata: { contentType },
   })
 
-  // If transcription fails we still return the saved recording, so the
-  // patient can type the notes themselves.
-  let transcript: string | null = null
+  // If transcription or extraction fails we still return a draft, so the
+  // patient can fill it in themselves.
+  const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
+  let transcript: string | undefined
   try {
-    const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
     const result = await openai.audio.transcriptions.create({
       model: "gpt-transcribe",
       // OpenAI works out the audio format from the file name.
@@ -56,7 +67,17 @@ async function processRecording(request: Request, env: Env): Promise<Response> {
     console.error("Transcription failed:", err)
   }
 
-  return Response.json({ transcript, recordingFilename } satisfies ProcessResponse)
+  const extracted = transcript
+    ? await extractEvent(openai, transcript, recordedAtLocal.data)
+    : null
+
+  const event = createDraftEvent({
+    recordedAt: new Date(recordedAtLocal.data),
+    transcript,
+    recordingFilename,
+    extracted: extracted ?? undefined,
+  })
+  return Response.json({ event } satisfies ProcessResponse)
 }
 
 async function getRecording(filename: string, env: Env): Promise<Response> {

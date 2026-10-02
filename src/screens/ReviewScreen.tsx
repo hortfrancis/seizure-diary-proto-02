@@ -6,24 +6,35 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { recordingUrl } from "@/lib/api"
 import { toDateTimeInputValue } from "@/lib/format"
-import { eventTypeLabels, type DiaryEvent, type EventType } from "@/types"
+import {
+  EventTypeSchema,
+  eventTypeLabels,
+  type DraftEvent,
+} from "@/types"
 
 type Props = {
-  event: DiaryEvent
-  onSave: (event: DiaryEvent) => void
+  event: DraftEvent
+  onSave: (event: DraftEvent) => void
   onCancel: () => void
 }
 
-const eventTypes = Object.keys(eventTypeLabels) as EventType[]
+const eventTypes = EventTypeSchema.options
 
 export function ReviewScreen({ event, onSave, onCancel }: Props) {
   const [type, setType] = useState(event.type)
-  const [time, setTime] = useState(toDateTimeInputValue(event.time))
+  const [time, setTime] = useState(
+    toDateTimeInputValue(new Date(event.datetime)),
+  )
   const [notes, setNotes] = useState(event.notes)
 
   function save() {
     // A datetime-local value with no timezone is read as local time.
-    onSave({ ...event, type, time: new Date(time), notes: notes.trim() })
+    onSave({
+      ...event,
+      type,
+      datetime: new Date(time).toISOString(),
+      notes: notes.trim(),
+    })
   }
 
   return (

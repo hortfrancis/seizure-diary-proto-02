@@ -37,14 +37,15 @@ seizure-diary-proto-02/
 │   │   └── ui/               # shadcn/ui components (added by its CLI)
 │   ├── lib/
 │   │   ├── utils.ts          # shadcn helper (cn)
-│   │   ├── mockEvent.ts      # Builds the draft event (type/time still placeholders)
+│   │   ├── draft.ts          # Builds the draft event, with fallbacks (shared with the Worker)
 │   │   ├── format.ts         # Date/time formatting helpers
 │   │   ├── recorder.ts       # Microphone recording (MediaRecorder)
 │   │   └── api.ts            # Calls to the Worker
-│   └── types.ts              # Shared types, e.g. DiaryEvent
+│   └── types.ts              # Zod schemas + types, shared with the Worker
 │
 └── worker/                   # Back end (Cloudflare Worker)
-    └── index.ts              # API routes: POST /api/process, GET /api/recordings/:filename
+    ├── index.ts              # API routes: POST /api/process, GET /api/recordings/:filename
+    └── extract.ts            # LLM prompt and call: transcript → event
 ```
 
 ## Packages
@@ -63,7 +64,8 @@ Everything needed for Step 01. Nothing for recording, AI or D1 yet.
 | `radix-ui` | Accessible primitives behind shadcn/ui components (added by the shadcn CLI) |
 | `shadcn` | Provides `shadcn/tailwind.css`, imported in `index.css` (added by the shadcn CLI) |
 | `@fontsource-variable/geist` | Geist font, from shadcn's default "Nova" preset (added by the shadcn CLI) |
-| `openai` | OpenAI SDK, used by the Worker for transcription (and the LLM in Step 04) |
+| `openai` | OpenAI SDK, used by the Worker for transcription and the LLM |
+| `zod` | Event schema, LLM structured output and validation |
 
 ### Dev dependencies
 
@@ -121,33 +123,14 @@ One thing the patient reports: a possible seizure, waking up, going to sleep, or
 - **`recordingFilename`:** set when the audio is saved to the bucket (a later step).
 - **`id`, `patientId`, `recordedAt`:** set by the app and Worker, not the LLM.
 
-### Zod schema (sketch)
+### Zod schemas
 
-One schema in `src/types.ts`, used by both the app and the Worker, with the TypeScript type derived from it:
+All in `src/types.ts`, shared by the app and the Worker. The TypeScript types are derived from them.
 
-```ts
-export const EventTypeSchema = z.enum(["seizure", "wake", "sleep", "other"])
-
-export const DiaryEventSchema = z.object({
-  id: z.uuid(),
-  patientId: z.string(),
-  datetime: z.iso.datetime(),
-  type: EventTypeSchema,
-  recordingFilename: z.string().optional(),
-  transcript: z.string().optional(),
-  notes: z.string(),
-  recordedAt: z.iso.datetime(),
-})
-
-export type DiaryEvent = z.infer<typeof DiaryEventSchema>
-
-// What we ask the LLM to return: just the fields it works out.
-export const ExtractedEventSchema = DiaryEventSchema.pick({
-  datetime: true,
-  type: true,
-  notes: true,
-})
-```
+- **`DiaryEventSchema`:** the full event, as in the table above.
+- **`DraftEventSchema`:** the same without `id`. This is an event the patient hasn't saved yet.
+- **`ExtractedEventSchema`:** what the LLM returns (`type`, `datetime`, `notes`). Its `datetime` keeps the patient's UTC offset, and is converted to UTC for the draft.
+- **`ProcessResponseSchema`:** what `POST /api/process` returns (`{ event }`). The app validates it before use.
 
 ### Storage
 
@@ -157,12 +140,6 @@ export const ExtractedEventSchema = DiaryEventSchema.pick({
 ### Not in the model yet
 
 - **Patients and auth:** there's no patients table or login. `patientId` is just a hard-coded string for now.
-
-### Changes from the current code
-
-- **Type values:** the code uses `"woke-up"` and `"went-to-sleep"`, which become `"wake"` and `"sleep"`.
-- **Time field:** `time: Date` becomes `datetime: string`.
-- **When:** both changes happen in Step 04, when the Zod schema replaces the hand-written type.
 
 ## Notes
 

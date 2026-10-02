@@ -1,19 +1,24 @@
-import type { ProcessResponse } from "@/types"
+import { ProcessResponseSchema, type DraftEvent } from "@/types"
+import { createDraftEvent } from "@/lib/draft"
+import { toLocalISOString } from "@/lib/format"
 
-// Uploads the recording to be stored and transcribed. Returns null if the
-// request fails, so the caller can carry on without a transcript.
+// Uploads the recording to be stored, transcribed and turned into a draft
+// event. If anything goes wrong, returns an empty draft so the patient can
+// fill it in themselves.
 export async function processRecording(
   audio: Blob,
-): Promise<ProcessResponse | null> {
+  recordedAt: Date,
+): Promise<DraftEvent> {
   try {
     const form = new FormData()
     form.append("audio", audio)
+    form.append("recordedAt", toLocalISOString(recordedAt))
     const response = await fetch("/api/process", { method: "POST", body: form })
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
-    return (await response.json()) as ProcessResponse
+    return ProcessResponseSchema.parse(await response.json()).event
   } catch (err) {
     console.error("Processing failed:", err)
-    return null
+    return createDraftEvent({ recordedAt })
   }
 }
 

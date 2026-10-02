@@ -17,3 +17,15 @@ export function toDateTimeInputValue(time: Date): string {
     `T${pad(time.getHours())}:${pad(time.getMinutes())}`
   )
 }
+
+// e.g. "2026-10-02T18:10:00+01:00": local time with its UTC offset, so the
+// LLM can work out phrases like "this morning" in the patient's timezone.
+export function toLocalISOString(time: Date): string {
+  const pad = (n: number) => String(Math.abs(n)).padStart(2, "0")
+  const offset = -time.getTimezoneOffset()
+  const sign = offset >= 0 ? "+" : "-"
+  return (
+    `${toDateTimeInputValue(time)}:${pad(time.getSeconds())}` +
+    `${sign}${pad(Math.trunc(offset / 60))}:${pad(offset % 60)}`
+  )
+}

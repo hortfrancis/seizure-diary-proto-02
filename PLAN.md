@@ -103,6 +103,8 @@ Small steps. Each step should leave us with something that runs.
 
 ## Step 04: Turn the transcript into an event with an LLM
 
+**Status:** ✅ Done (2 Oct 2026)
+
 **Goal:** the Review screen opens with the event type, time and notes all filled in from what the patient said.
 
 ### Do
