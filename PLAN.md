@@ -127,3 +127,37 @@ Small steps. Each step should leave us with something that runs.
 - Saying "I woke up about ten minutes ago" gives type **Woke up** and a time about ten minutes before recording.
 - Saying "I think I just had a seizure, my arm was jerking" gives type **Possible seizure**, with the details in Notes.
 - A bad or empty reply still lands on a usable Review screen.
+
+---
+
+## Step 05: Deploy to Cloudflare Workers
+
+**Status:** 🚧 Deployed to https://seizure-diary-proto-02.alex-hortfrancis.workers.dev (2 Oct 2026). Still to do: test on real phones.
+
+**Goal:** the app runs at a public `*.workers.dev` URL, so we can try it on a real phone over HTTPS.
+
+### Do
+
+1. Create the real R2 bucket: `npx wrangler r2 bucket create seizure-diary-recordings`.
+2. Store a separate, production OpenAI key as a Worker secret, `OPENAI_API_KEY`, in the Cloudflare dashboard. It's never committed or put in `wrangler.jsonc`.
+3. Deploy: `npm run deploy`.
+4. Try it on a phone:
+   - iPhone Safari records MP4 rather than WebM, so check recording, transcription and playback all work there.
+   - Also check an Android phone or Chrome, if one is to hand.
+5. Add the live URL and the deploy commands to a short `README.md`.
+
+### Things to know
+
+- **Open to anyone with the URL.** There's no login, so anyone who finds the URL can use the app, which spends OpenAI credit (fractions of a penny per recording). That's fine for a demo, but set a monthly budget limit on the OpenAI project as a safety net.
+- **Recordings** can be played by anyone with their link. The links use random IDs, so they can't be guessed, and there's no real patient data.
+
+### Not yet
+
+- D1 (events are still not saved anywhere)
+- A custom domain
+- Automatic deploys from GitHub
+
+### Done when
+
+- The `workers.dev` URL loads on a phone.
+- Recording → Review (filled in by the LLM) → Save works on iPhone Safari, and on Android Chrome if available.
