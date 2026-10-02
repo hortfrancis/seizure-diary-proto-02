@@ -1,3 +1,9 @@
+Written by Alex, not the LLM coding agent.
+
+Agents should leave this file unchanged.
+
+# 01
+
 Hello!
 
 I am working on a hackathon project. (To be precise, a project continuing from a hackathon I participated in earlier this week.)
@@ -41,8 +47,20 @@ For this spike, our tech stack should be:
 - TypeScript
 - Vite
 - Shadcn UI
-- Phosphor Icons
+- ~~Phosphor Icons~~ Lucide Icons (default with Shadcn UI)
 
 What I would like us to do next is:
 
 - Create a 'level 0' system diagram, that describes the entire system in a 'zoomed-out' fashion. Please create this in `/docs/system-diagram-level-0.md`, using Mermaid.
+
+---
+
+# 02
+
+To clarify: this is a basic prototype to demonstrate whether the idea for this simple web app has any actual value.
+
+No real patient data will be used in this prototype.
+
+This will not go 'into production', as a healthcare app.
+
+This project would be used to demonstrate the system, as a working proof-of-concept prototype, and public repo.
