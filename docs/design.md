@@ -22,6 +22,9 @@ seizure-diary-proto-02/
 ├── .dev.vars                 # Local secrets, e.g. OPENAI_API_KEY (gitignored)
 ├── .dev.vars.example         # Which secrets are needed (committed, no values)
 ├── components.json           # shadcn/ui config
+├── scripts/
+│   └── screenshots.ts        # `npm run screenshots`: phone-sized shot of every screen
+├── screenshots/              # Output of the above (gitignored)
 │
 ├── src/                      # Front end (React)
 │   ├── main.tsx              # Mounts the app
@@ -82,6 +85,7 @@ Everything needed for Step 01. Nothing for recording, AI or D1 yet.
 | `tailwindcss` | Tailwind CSS (v4) |
 | `@tailwindcss/vite` | Tailwind's Vite plugin |
 | `tw-animate-css` | Animations used by shadcn/ui |
+| `playwright-core` | Drives the installed Google Chrome for `npm run screenshots` |
 
 ### Notes on packages
 

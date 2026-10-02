@@ -22,6 +22,14 @@ npm run dev
 
 R2 is simulated locally, so no Cloudflare account is needed to run it.
 
+## Screenshots
+
+```sh
+npm run screenshots
+```
+
+Saves a phone-sized screenshot of every screen to `screenshots/`, using example data. It needs Google Chrome installed, but no API key, and it never calls OpenAI.
+
 ## Deploying
 
 Needs a Cloudflare account with R2 enabled.
