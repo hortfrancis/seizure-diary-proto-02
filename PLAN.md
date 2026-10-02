@@ -6,6 +6,8 @@ Small steps. Each step should leave us with something that runs.
 
 ## Step 01: Scaffold the app and click through mocked screens
 
+**Status:** ✅ Done (2 Oct 2026)
+
 **Goal:** a running app where you can click through the whole "record an event" flow, using fake data. No real recording, AI or database yet.
 
 ### Do
