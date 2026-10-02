@@ -18,6 +18,12 @@ export default function App() {
     setScreen("review")
   }
 
+  // Nothing is stored yet; we just keep the edited event to show on the Saved screen.
+  function saveEvent(edited: DiaryEvent) {
+    setEvent(edited)
+    setScreen("saved")
+  }
+
   function goHome() {
     setEvent(null)
     setScreen("home")
@@ -37,11 +43,13 @@ export default function App() {
       {screen === "review" && event && (
         <ReviewScreen
           event={event}
-          onSave={() => setScreen("saved")}
+          onSave={saveEvent}
           onCancel={goHome}
         />
       )}
-      {screen === "saved" && <SavedScreen onDone={goHome} />}
+      {screen === "saved" && event && (
+        <SavedScreen event={event} onDone={goHome} />
+      )}
     </main>
   )
 }

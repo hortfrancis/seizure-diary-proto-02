@@ -33,7 +33,8 @@ seizure-diary-proto-02/
 │   │   └── ui/               # shadcn/ui components (added by its CLI)
 │   ├── lib/
 │   │   ├── utils.ts          # shadcn helper (cn)
-│   │   └── mockEvent.ts      # Hard-coded example event for the Review screen
+│   │   ├── mockEvent.ts      # Hard-coded example event for the Review screen
+│   │   └── format.ts         # Date/time formatting helpers
 │   └── types.ts              # Shared types, e.g. DiaryEvent
 │
 └── worker/                   # Back end (Cloudflare Worker)

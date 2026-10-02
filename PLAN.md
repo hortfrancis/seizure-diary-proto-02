@@ -39,6 +39,8 @@ Small steps. Each step should leave us with something that runs.
 
 ## Step 02: Edit the event on the Review screen
 
+**Status:** ✅ Done (2 Oct 2026)
+
 **Goal:** the patient can correct the event before saving. The Review screen shows editable fields, pre-filled with the mocked "transcription" result.
 
 ### Do
