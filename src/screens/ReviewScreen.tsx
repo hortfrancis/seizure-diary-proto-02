@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { recordingUrl } from "@/lib/api"
 import { toDateTimeInputValue } from "@/lib/format"
 import { eventTypeLabels, type DiaryEvent, type EventType } from "@/types"
 
@@ -22,12 +23,27 @@ export function ReviewScreen({ event, onSave, onCancel }: Props) {
 
   function save() {
     // A datetime-local value with no timezone is read as local time.
-    onSave({ type, time: new Date(time), notes: notes.trim() })
+    onSave({ ...event, type, time: new Date(time), notes: notes.trim() })
   }
 
   return (
     <div className="flex flex-1 flex-col gap-6">
       <h1 className="text-2xl font-semibold">Is this right?</h1>
+
+      {event.transcript === undefined && (
+        <p className="rounded-2xl bg-muted p-4 text-lg">
+          We couldn't turn your recording into text. Please type what happened
+          in Notes.
+        </p>
+      )}
+
+      {event.recordingFilename && (
+        <audio
+          controls
+          src={recordingUrl(event.recordingFilename)}
+          className="w-full"
+        />
+      )}
 
       <div className="flex flex-col gap-2">
         <p className="text-sm font-medium">Event</p>

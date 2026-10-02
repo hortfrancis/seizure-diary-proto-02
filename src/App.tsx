@@ -1,5 +1,6 @@
 import { useState } from "react"
 import type { DiaryEvent } from "@/types"
+import { processRecording } from "@/lib/api"
 import { createMockEvent } from "@/lib/mockEvent"
 import { HomeScreen } from "@/screens/HomeScreen"
 import { RecordingScreen } from "@/screens/RecordingScreen"
@@ -13,8 +14,12 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>("home")
   const [event, setEvent] = useState<DiaryEvent | null>(null)
 
-  function finishProcessing() {
-    setEvent(createMockEvent())
+  async function finishRecording(audio: Blob) {
+    setScreen("processing")
+    const result = await processRecording(audio)
+    setEvent(
+      createMockEvent(result?.transcript ?? null, result?.recordingFilename),
+    )
     setScreen("review")
   }
 
@@ -35,17 +40,11 @@ export default function App() {
         <HomeScreen onRecord={() => setScreen("recording")} />
       )}
       {screen === "recording" && (
-        <RecordingScreen onStop={() => setScreen("processing")} />
+        <RecordingScreen onStop={finishRecording} onCancel={goHome} />
       )}
-      {screen === "processing" && (
-        <ProcessingScreen onDone={finishProcessing} />
-      )}
+      {screen === "processing" && <ProcessingScreen />}
       {screen === "review" && event && (
-        <ReviewScreen
-          event={event}
-          onSave={saveEvent}
-          onCancel={goHome}
-        />
+        <ReviewScreen event={event} onSave={saveEvent} onCancel={goHome} />
       )}
       {screen === "saved" && event && (
         <SavedScreen event={event} onDone={goHome} />

@@ -69,6 +69,8 @@ Small steps. Each step should leave us with something that runs.
 
 ## Step 03: Record audio, store it and transcribe it
 
+**Status:** ✅ Done (2 Oct 2026)
+
 **Goal:** speak into the app and see what you said in the Notes field on the Review screen. The recording is kept in R2. Event type and time stay mocked for now.
 
 ### Do
