@@ -67,9 +67,9 @@ Small steps. Each step should leave us with something that runs.
 
 ---
 
-## Step 03: Record audio and transcribe it
+## Step 03: Record audio, store it and transcribe it
 
-**Goal:** speak into the app and see what you said in the Notes field on the Review screen. Event type and time stay mocked for now.
+**Goal:** speak into the app and see what you said in the Notes field on the Review screen. The recording is kept in R2. Event type and time stay mocked for now.
 
 ### Do
 
@@ -78,8 +78,10 @@ Small steps. Each step should leave us with something that runs.
 3. Add `src/lib/recorder.ts`: a small wrapper around the browser's `MediaRecorder` that starts and stops recording and returns the audio.
 4. **Recording screen:** ask for microphone access and start recording straight away. If access is denied, explain and offer a way back to Home.
 5. **On Stop:** send the audio to a new Worker endpoint, `POST /api/process`, while the Processing screen shows.
-6. **Worker:** send the audio to OpenAI Whisper and return `{ transcript }`.
-7. **Review screen:** put the transcript in Notes. Type and time stay mocked.
+6. **Worker:** save the audio to an R2 bucket, then transcribe it with OpenAI `gpt-transcribe`. Return `{ transcript, recordingFilename }`.
+   - Add `GET /api/recordings/:filename`, so the app can play recordings back.
+   - In local dev, R2 is simulated on disk, so no Cloudflare account is needed yet.
+7. **Review screen:** put the transcript in Notes and add a small player for the recording. Type and time stay mocked.
 8. **If transcription fails:** open the Review screen anyway with empty Notes and a short message, so the patient can type it instead.
 
 ### Not yet
@@ -91,6 +93,7 @@ Small steps. Each step should leave us with something that runs.
 ### Done when
 
 - Recording a few sentences on a laptop puts an accurate transcript in Notes.
+- The recording plays back on the Review screen.
 - Denying microphone access, or a failed transcription, doesn't leave the patient stuck.
 - The API key is never committed.
 
@@ -103,11 +106,12 @@ Small steps. Each step should leave us with something that runs.
 ### Do
 
 1. Add `zod`. Define the event schema once in `src/types.ts` and derive the `DiaryEvent` type from it.
-2. **Worker:** after transcribing, send the transcript to a cheaper OpenAI model, using structured output built from the Zod schema.
+2. **Worker:** after transcribing, send the transcript to OpenAI `gpt-6-luna` (Chat Completions, low reasoning effort), using structured output built from the Zod schema.
    - Include the recording time (with the phone's timezone offset), so it can work out phrases like "about 10 minutes ago".
 3. Validate the LLM's reply with Zod. `/api/process` now returns `{ transcript, event }`.
 4. **If the reply fails validation:** fall back to a draft with the recording time, type "Other" and the transcript as Notes.
 5. **Review screen:** pre-fill all fields from the returned event. Remove `mockEvent.ts`.
+6. Switch the code over to the data model in `docs/design.md`, including the renamed type values and the hard-coded `patientId`.
 
 ### Not yet
 

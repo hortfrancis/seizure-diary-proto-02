@@ -81,6 +81,82 @@ Everything needed for Step 01. Nothing for recording, AI or D1 yet.
 - **TypeScript 7** works fine with this setup.
 - **Versions:** we'll install the latest of each and let `package-lock.json` pin them.
 
+## Data model
+
+### Event
+
+One thing the patient reports: a possible seizure, waking up, going to sleep, or something else.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | string (UUID) | Yes | Unique ID, created by the Worker when saving. |
+| `patientId` | string | Yes | Which patient the event belongs to. Hard-coded to `"demo-patient"` for the prototype (no auth). |
+| `datetime` | ISO 8601 string (UTC) | Yes | When the event happened. Worked out by the LLM, then checked by the patient. |
+| `type` | `"seizure"` \| `"wake"` \| `"sleep"` \| `"other"` | Yes | What kind of event it was. |
+| `recordingFilename` | string | No | Name of the stored audio file in a bucket (Cloudflare R2), so a clinician can listen to it. Empty when no recording was stored. |
+| `transcript` | string | No | The full speech-to-text transcript, before any processing. Empty if transcription failed. |
+| `notes` | string | Yes (can be `""`) | Extra notes, tidied up by the LLM and editable by the patient. |
+| `recordedAt` | ISO 8601 string (UTC) | Yes | When the patient logged the event. This can differ from `datetime` (e.g. "I woke up about 10 minutes ago"). |
+
+**Display labels:**
+
+| Type | Label |
+| --- | --- |
+| `seizure` | Possible seizure |
+| `wake` | Woke up |
+| `sleep` | Went to sleep |
+| `other` | Other |
+
+### Where each field comes from
+
+- **`datetime`, `type`, `notes`:** the LLM, from the transcript and `recordedAt`. The patient can then edit them on the Review screen.
+- **`transcript`:** speech-to-text.
+- **`recordingFilename`:** set when the audio is saved to the bucket (a later step).
+- **`id`, `patientId`, `recordedAt`:** set by the app and Worker, not the LLM.
+
+### Zod schema (sketch)
+
+One schema in `src/types.ts`, used by both the app and the Worker, with the TypeScript type derived from it:
+
+```ts
+export const EventTypeSchema = z.enum(["seizure", "wake", "sleep", "other"])
+
+export const DiaryEventSchema = z.object({
+  id: z.uuid(),
+  patientId: z.string(),
+  datetime: z.iso.datetime(),
+  type: EventTypeSchema,
+  recordingFilename: z.string().optional(),
+  transcript: z.string().optional(),
+  notes: z.string(),
+  recordedAt: z.iso.datetime(),
+})
+
+export type DiaryEvent = z.infer<typeof DiaryEventSchema>
+
+// What we ask the LLM to return: just the fields it works out.
+export const ExtractedEventSchema = DiaryEventSchema.pick({
+  datetime: true,
+  type: true,
+  notes: true,
+})
+```
+
+### Storage
+
+- **D1:** one `events` table with these fields as columns, using snake_case names (e.g. `recorded_at`). Dates are stored as ISO text.
+- **R2:** audio files, named with a random UUID (e.g. `<uuid>.webm`). The audio is uploaded before the event is saved, so it can't use the event ID. If the patient cancels, the file stays in the bucket, which is fine for a prototype.
+
+### Not in the model yet
+
+- **Patients and auth:** there's no patients table or login. `patientId` is just a hard-coded string for now.
+
+### Changes from the current code
+
+- **Type values:** the code uses `"woke-up"` and `"went-to-sleep"`, which become `"wake"` and `"sleep"`.
+- **Time field:** `time: Date` becomes `datetime: string`.
+- **When:** both changes happen in Step 04, when the Zod schema replaces the hand-written type.
+
 ## Notes
 
 - **Screens, not routes:** `App.tsx` keeps a single `screen` value in state and renders the matching screen. A router can come later if we need one.
