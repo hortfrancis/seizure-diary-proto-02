@@ -1,7 +1,7 @@
 import OpenAI from "openai"
 import { z } from "zod"
 import { createDraftEvent } from "../src/lib/draft"
-import type { ProcessResponse } from "../src/types"
+import type { ExtractedEvent, ProcessResponse } from "../src/types"
 import { extractEvent } from "./extract"
 
 // OpenAI's limit for audio uploads.
@@ -54,22 +54,23 @@ async function processRecording(request: Request, env: Env): Promise<Response> {
 
   // If transcription or extraction fails we still return a draft, so the
   // patient can fill it in themselves.
-  const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
   let transcript: string | undefined
+  let extracted: ExtractedEvent | null = null
   try {
+    // Inside the try: this throws if the API key isn't set.
+    const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY })
     const result = await openai.audio.transcriptions.create({
       model: "gpt-transcribe",
       // OpenAI works out the audio format from the file name.
       file: new File([data], recordingFilename, { type: contentType }),
     })
     transcript = result.text.trim()
+    if (transcript) {
+      extracted = await extractEvent(openai, transcript, recordedAtLocal.data)
+    }
   } catch (err) {
     console.error("Transcription failed:", err)
   }
-
-  const extracted = transcript
-    ? await extractEvent(openai, transcript, recordedAtLocal.data)
-    : null
 
   const event = createDraftEvent({
     recordedAt: new Date(recordedAtLocal.data),
