@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { CheckIcon, XIcon } from "lucide-react"
+import { EventTypeIcon } from "@/components/EventTypeIcon"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -20,19 +21,27 @@ type Props = {
 
 const eventTypes = EventTypeSchema.options
 
+// The event counts as happening "now" if it's within a minute of recording.
+function isNow(event: DraftEvent): boolean {
+  const diff = Date.parse(event.datetime) - Date.parse(event.recordedAt)
+  return Math.abs(diff) <= 60_000
+}
+
 export function ReviewScreen({ event, onSave, onCancel }: Props) {
   const [type, setType] = useState(event.type)
+  // Shows "Now" until the patient chooses to change the time.
+  const [editingTime, setEditingTime] = useState(!isNow(event))
   const [time, setTime] = useState(
     toDateTimeInputValue(new Date(event.datetime)),
   )
   const [notes, setNotes] = useState(event.notes)
 
   function save() {
-    // A datetime-local value with no timezone is read as local time.
     onSave({
       ...event,
       type,
-      datetime: new Date(time).toISOString(),
+      // A datetime-local value with no timezone is read as local time.
+      datetime: editingTime ? new Date(time).toISOString() : event.datetime,
       notes: notes.trim(),
     })
   }
@@ -49,24 +58,28 @@ export function ReviewScreen({ event, onSave, onCancel }: Props) {
       )}
 
       {event.recordingFilename && (
-        <audio
-          controls
-          src={recordingUrl(event.recordingFilename)}
-          className="w-full"
-        />
+        <div className="flex flex-col gap-1">
+          <p className="text-sm text-muted-foreground">Your recording</p>
+          <audio
+            controls
+            src={recordingUrl(event.recordingFilename)}
+            className="h-10 w-full"
+          />
+        </div>
       )}
 
       <div className="flex flex-col gap-2">
-        <p className="text-sm font-medium">Event</p>
+        <p className="text-sm font-medium">What happened?</p>
         <div className="grid grid-cols-2 gap-2">
           {eventTypes.map((t) => (
             <Button
               key={t}
               variant={t === type ? "default" : "outline"}
               aria-pressed={t === type}
-              className="h-16 rounded-2xl text-lg whitespace-normal"
+              className="h-20 flex-col gap-1 rounded-2xl text-lg whitespace-normal"
               onClick={() => setType(t)}
             >
+              <EventTypeIcon type={t} className="size-6" />
               {eventTypeLabels[t]}
             </Button>
           ))}
@@ -75,13 +88,27 @@ export function ReviewScreen({ event, onSave, onCancel }: Props) {
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="time">Time</Label>
-        <Input
-          id="time"
-          type="datetime-local"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-          className="h-14 rounded-2xl text-lg md:text-lg"
-        />
+        {editingTime ? (
+          <Input
+            id="time"
+            type="datetime-local"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            className="h-14 rounded-2xl text-lg md:text-lg"
+          />
+        ) : (
+          <div className="flex h-14 items-center justify-between rounded-2xl border pr-2 pl-4 text-lg">
+            <span>Now</span>
+            <Button
+              variant="ghost"
+              aria-label="Change time"
+              className="h-10 rounded-xl text-base"
+              onClick={() => setEditingTime(true)}
+            >
+              Change
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col gap-2">
@@ -98,7 +125,7 @@ export function ReviewScreen({ event, onSave, onCancel }: Props) {
         <Button
           className="h-20 rounded-2xl text-xl"
           onClick={save}
-          disabled={time === ""}
+          disabled={editingTime && time === ""}
         >
           <CheckIcon className="size-7" />
           Save

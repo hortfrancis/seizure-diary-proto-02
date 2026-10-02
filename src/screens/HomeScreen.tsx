@@ -1,4 +1,4 @@
-import { MicIcon } from "lucide-react"
+import { MicIcon, TriangleAlertIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 type Props = {
@@ -7,7 +7,11 @@ type Props = {
 
 export function HomeScreen({ onRecord }: Props) {
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex flex-1 flex-col gap-6">
+      <p className="flex items-center gap-2 rounded-2xl bg-amber-100 p-4 font-medium text-amber-900">
+        <TriangleAlertIcon className="size-5 shrink-0" />
+        Prototype only: do not use real patient data!
+      </p>
       <h1 className="text-2xl font-semibold">Seizure Diary</h1>
       <div className="flex flex-1 items-center">
         <Button

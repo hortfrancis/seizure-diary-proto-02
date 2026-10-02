@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { MicOffIcon, SquareIcon } from "lucide-react"
+import { CheckIcon, MicOffIcon, XIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { startRecording, type Recorder } from "@/lib/recorder"
 
@@ -68,15 +68,25 @@ export function RecordingScreen({ onStop, onCancel }: Props) {
       <p className="text-center text-lg text-muted-foreground">
         Say what happened, and roughly when.
       </p>
-      <Button
-        variant="destructive"
-        className="h-48 w-full flex-col gap-4 rounded-3xl text-2xl"
-        onClick={stop}
-        disabled={status !== "recording"}
-      >
-        <SquareIcon className="size-12" />
-        Stop recording
-      </Button>
+      <div className="flex w-full flex-col gap-3">
+        <Button
+          className="h-40 w-full flex-col gap-4 rounded-3xl text-2xl"
+          onClick={stop}
+          disabled={status !== "recording"}
+        >
+          <CheckIcon className="size-12" />
+          Save recording
+        </Button>
+        {/* Leaving this screen stops the recording and throws it away. */}
+        <Button
+          variant="outline"
+          className="h-16 w-full rounded-2xl text-lg"
+          onClick={onCancel}
+        >
+          <XIcon className="size-6" />
+          Cancel
+        </Button>
+      </div>
     </div>
   )
 }
