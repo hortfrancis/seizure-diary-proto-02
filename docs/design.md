@@ -52,8 +52,10 @@ Everything needed for Step 01. Nothing for recording, AI or D1 yet.
 | `react-dom` | Renders React in the browser |
 | `lucide-react` | Icons (shadcn's default) |
 | `class-variance-authority` | Used by shadcn/ui components for variants |
-| `clsx` | Used by the shadcn `cn` helper |
-| `tailwind-merge` | Used by the shadcn `cn` helper |
+| `cn` | shadcn's class-name helper (replaces `clsx` + `tailwind-merge`) |
+| `radix-ui` | Accessible primitives behind shadcn/ui components (added by the shadcn CLI) |
+| `shadcn` | Provides `shadcn/tailwind.css`, imported in `index.css` (added by the shadcn CLI) |
+| `@fontsource-variable/geist` | Geist font, from shadcn's default "Nova" preset (added by the shadcn CLI) |
 
 ### Dev dependencies
 
@@ -75,6 +77,7 @@ Everything needed for Step 01. Nothing for recording, AI or D1 yet.
 
 - **shadcn/ui isn't a package.** We run its CLI with `npx shadcn@latest`, which copies component files into `src/components/ui/`. Some components bring small extra dependencies (e.g. Radix UI packages), and the CLI installs those itself.
 - **Icons:** we use Lucide (`lucide-react`) because it's shadcn's default, so the CLI and its components work with no extra setup.
+- **TypeScript 7** works fine with this setup.
 - **Versions:** we'll install the latest of each and let `package-lock.json` pin them.
 
 ## Notes
