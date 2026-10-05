@@ -166,7 +166,7 @@ Small steps. Each step should leave us with something that runs.
 
 ## Step 06: Save events to D1, and show them to the clinician
 
-**Status:** ✅ Done locally (5 Oct 2026). Still to do: deploy and run the migration on the real database.
+**Status:** ✅ Done and deployed (5 Oct 2026)
 
 **Goal:** pressing Save stores the event, and a clinician can see every saved event. This answers "what does the output look like?".
 
