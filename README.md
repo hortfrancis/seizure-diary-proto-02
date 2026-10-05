@@ -1,6 +1,6 @@
 # Seizure Diary (prototype)
 
-<img width="1448" height="1086" alt="image" src="https://github.com/user-attachments/assets/722c9cf1-dbdd-4245-96c5-88765c3662ed" />
+<img width="1448" height="1086" alt="How the Seizure Diary Prototype Works" src="https://github.com/user-attachments/assets/22052ff2-0b6d-45bc-a6d3-338dcb43165b" />
 
 A proof-of-concept from an NHS hackathon. Patients wearing a take-home EEG headset can record events (possible seizures, waking up, going to sleep) by voice instead of on a paper form. The app transcribes the recording, uses an LLM to fill in the event details, and lets the patient check and correct them before saving.
 
