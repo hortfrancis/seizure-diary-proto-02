@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { CheckIcon, XIcon } from "lucide-react"
+import { CheckIcon, LoaderCircleIcon, XIcon } from "lucide-react"
 import { EventTypeIcon } from "@/components/EventTypeIcon"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,7 +15,7 @@ import {
 
 type Props = {
   event: DraftEvent
-  onSave: (event: DraftEvent) => void
+  onSave: (event: DraftEvent) => Promise<void>
   onCancel: () => void
 }
 
@@ -35,15 +35,25 @@ export function ReviewScreen({ event, onSave, onCancel }: Props) {
     toDateTimeInputValue(new Date(event.datetime)),
   )
   const [notes, setNotes] = useState(event.notes)
+  const [saving, setSaving] = useState(false)
+  const [saveFailed, setSaveFailed] = useState(false)
 
-  function save() {
-    onSave({
-      ...event,
-      type,
-      // A datetime-local value with no timezone is read as local time.
-      datetime: editingTime ? new Date(time).toISOString() : event.datetime,
-      notes: notes.trim(),
-    })
+  async function save() {
+    setSaving(true)
+    setSaveFailed(false)
+    try {
+      await onSave({
+        ...event,
+        type,
+        // A datetime-local value with no timezone is read as local time.
+        datetime: editingTime ? new Date(time).toISOString() : event.datetime,
+        notes: notes.trim(),
+      })
+    } catch (err) {
+      console.error("Saving failed:", err)
+      setSaveFailed(true)
+      setSaving(false)
+    }
   }
 
   return (
@@ -122,18 +132,28 @@ export function ReviewScreen({ event, onSave, onCancel }: Props) {
       </div>
 
       <div className="mt-auto flex flex-col gap-3">
+        {saveFailed && (
+          <p role="alert" className="rounded-2xl bg-red-100 p-4 text-lg text-red-900">
+            We couldn't save this event. Please try again.
+          </p>
+        )}
         <Button
           className="h-20 rounded-2xl text-xl"
           onClick={save}
-          disabled={editingTime && time === ""}
+          disabled={saving || (editingTime && time === "")}
         >
-          <CheckIcon className="size-7" />
-          Save
+          {saving ? (
+            <LoaderCircleIcon className="size-7 animate-spin" />
+          ) : (
+            <CheckIcon className="size-7" />
+          )}
+          {saving ? "Saving…" : "Save"}
         </Button>
         <Button
           variant="outline"
           className="h-16 rounded-2xl text-lg"
           onClick={onCancel}
+          disabled={saving}
         >
           <XIcon className="size-6" />
           Cancel

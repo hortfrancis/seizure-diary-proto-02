@@ -1,4 +1,4 @@
-import { MicIcon, TriangleAlertIcon } from "lucide-react"
+import { ClipboardListIcon, MicIcon, TriangleAlertIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 type Props = {
@@ -22,6 +22,13 @@ export function HomeScreen({ onRecord }: Props) {
           Record an event
         </Button>
       </div>
+      {/* For demos: lets whoever we share the link with find the clinician's view. */}
+      <Button asChild variant="outline" className="h-16 rounded-2xl text-lg">
+        <a href="/clinician">
+          <ClipboardListIcon className="size-6" />
+          Clinician view: see saved events
+        </a>
+      </Button>
     </div>
   )
 }

@@ -4,12 +4,23 @@
   "main": "worker/index.ts",
   "compatibility_date": "2026-10-01",
   "assets": {
-    "not_found_handling": "single-page-application"
+    "not_found_handling": "single-page-application",
+    // Otherwise browser navigations to the API (e.g. the CSV download) get
+    // the app's index.html instead.
+    "run_worker_first": ["/api/*"]
   },
   "r2_buckets": [
     {
       "binding": "RECORDINGS",
       "bucket_name": "seizure-diary-recordings"
+    }
+  ],
+  // No database_id: Wrangler creates the database on first deploy.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "seizure-diary",
+      "migrations_dir": "migrations"
     }
   ]
 }

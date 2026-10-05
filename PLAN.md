@@ -161,3 +161,33 @@ Small steps. Each step should leave us with something that runs.
 
 - The `workers.dev` URL loads on a phone.
 - Recording → Review (filled in by the LLM) → Save works on iPhone Safari, and on Android Chrome if available.
+
+---
+
+## Step 06: Save events to D1, and show them to the clinician
+
+**Status:** ✅ Done locally (5 Oct 2026). Still to do: deploy and run the migration on the real database.
+
+**Goal:** pressing Save stores the event, and a clinician can see every saved event. This answers "what does the output look like?".
+
+### Do
+
+1. Add a D1 database (binding `DB`) to `wrangler.jsonc`, with no `database_id`, so Wrangler creates it on the first deploy.
+2. Add `migrations/0001_create_events.sql`: one `events` table, as in the data model in `docs/design.md`.
+3. **Worker** (`worker/events.ts`):
+   - `POST /api/events`: validate the draft with Zod, give it an ID and save it.
+   - `GET /api/events`: the demo patient's events, oldest first, as JSON.
+   - `GET /api/events.csv`: the same as a CSV download. Times are UTC, to line up with the EEG.
+4. **Review screen:** Save now waits for the event to be stored. If that fails, say so and let the patient try again, keeping their edits.
+5. **Clinician page** at `/clinician` (picked in `main.tsx`, still no router): a table of events with time, type, notes, what the patient said and a player for each recording, plus a "Download CSV" button.
+6. Add a clinician page screenshot to `npm run screenshots`.
+
+### Things to know
+
+- **The clinician page is open to anyone with the URL**, like the rest of the app. That's fine with no real patient data, but a real version would need login.
+
+### Not yet
+
+- More than one patient, and login for patients or clinicians
+- Editing or deleting saved events
+- Filtering by date, or exporting in a format an EEG system can import

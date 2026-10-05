@@ -1,6 +1,6 @@
 import { useState } from "react"
 import type { DraftEvent } from "@/types"
-import { processRecording } from "@/lib/api"
+import { processRecording, saveEvent } from "@/lib/api"
 import { HomeScreen } from "@/screens/HomeScreen"
 import { RecordingScreen } from "@/screens/RecordingScreen"
 import { ProcessingScreen } from "@/screens/ProcessingScreen"
@@ -20,8 +20,10 @@ export default function App() {
     setScreen("review")
   }
 
-  // Nothing is stored yet; we just keep the edited event to show on the Saved screen.
-  function saveEvent(edited: DraftEvent) {
+  // Throws if saving fails, so the Review screen can say so and let the
+  // patient try again.
+  async function confirmEvent(edited: DraftEvent) {
+    await saveEvent(edited)
     setEvent(edited)
     setScreen("saved")
   }
@@ -41,7 +43,7 @@ export default function App() {
       )}
       {screen === "processing" && <ProcessingScreen />}
       {screen === "review" && event && (
-        <ReviewScreen event={event} onSave={saveEvent} onCancel={goHome} />
+        <ReviewScreen event={event} onSave={confirmEvent} onCancel={goHome} />
       )}
       {screen === "saved" && event && (
         <SavedScreen event={event} onDone={goHome} />

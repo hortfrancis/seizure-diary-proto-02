@@ -52,3 +52,9 @@ export type ExtractedEvent = z.infer<typeof ExtractedEventSchema>
 // What POST /api/process returns.
 export const ProcessResponseSchema = z.object({ event: DraftEventSchema })
 export type ProcessResponse = z.infer<typeof ProcessResponseSchema>
+
+// What POST /api/events returns.
+export const SaveEventResponseSchema = z.object({ event: DiaryEventSchema })
+
+// What GET /api/events returns.
+export const EventsResponseSchema = z.object({ events: z.array(DiaryEventSchema) })

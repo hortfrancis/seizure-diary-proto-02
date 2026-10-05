@@ -10,11 +10,12 @@
 import { mkdir } from "node:fs/promises"
 import { chromium, type Page } from "playwright-core"
 import { createServer } from "vite"
-import type { ProcessResponse } from "../src/types"
+import type { DiaryEvent, ProcessResponse } from "../src/types"
 
 const OUT_DIR = `screenshots/${timestamp(new Date())}`
 const PORT = 5299
 const VIEWPORT = { width: 390, height: 844 } // a typical phone
+const DESKTOP_VIEWPORT = { width: 1280, height: 800 } // for the clinician page
 
 // What the Worker would return for a typical recording.
 const exampleResponse: ProcessResponse = {
@@ -30,6 +31,40 @@ const exampleResponse: ProcessResponse = {
     recordingFilename: "example.wav",
   },
 }
+
+// A few saved events, for the clinician page.
+const exampleEvents: DiaryEvent[] = [
+  {
+    id: "5b0c1f0e-1d0a-4c1e-9a53-0d5a1b6c7e01",
+    patientId: "demo-patient",
+    recordedAt: "2026-10-01T21:47:10.000Z",
+    datetime: "2026-10-01T21:47:10.000Z",
+    type: "sleep",
+    notes: "Going to sleep now.",
+    transcript: "Going to sleep now.",
+    recordingFilename: "example.wav",
+  },
+  {
+    id: "5b0c1f0e-1d0a-4c1e-9a53-0d5a1b6c7e02",
+    patientId: "demo-patient",
+    recordedAt: "2026-10-02T06:41:30.000Z",
+    datetime: "2026-10-02T06:30:00.000Z",
+    type: "wake",
+    notes: "Slept badly, woke up a couple of times in the night.",
+    transcript:
+      "I woke up about ten minutes ago. Slept badly, woke up a couple of times in the night.",
+    recordingFilename: "example.wav",
+  },
+  { ...exampleResponse.event, id: "5b0c1f0e-1d0a-4c1e-9a53-0d5a1b6c7e03" },
+  {
+    id: "5b0c1f0e-1d0a-4c1e-9a53-0d5a1b6c7e04",
+    patientId: "demo-patient",
+    recordedAt: "2026-10-02T17:05:00.000Z",
+    datetime: "2026-10-02T17:05:00.000Z",
+    type: "other",
+    notes: "Felt dizzy and a bit sick for a few minutes.",
+  },
+]
 
 async function main() {
   await mkdir(OUT_DIR, { recursive: true })
@@ -59,6 +94,9 @@ async function main() {
       await new Promise<void>((resolve) => (releaseProcessing = resolve))
       await route.fulfill({ json: exampleResponse })
     })
+    await page.route("**/api/events", (route) =>
+      route.fulfill({ status: 201, json: { event: exampleEvents[2] } }),
+    )
     await page.goto(baseUrl)
     await shoot(page, "01-home", "Record an event")
     await page.getByText("Record an event").click()
@@ -78,6 +116,15 @@ async function main() {
     await page.getByText("Record an event").click()
     await page.getByRole("button", { name: "Save recording" }).click()
     await shoot(page, "06-review-no-transcript", "Is this right?")
+    await page.close()
+
+    // What the clinician sees.
+    page = await newPage(browser, DESKTOP_VIEWPORT)
+    await page.route("**/api/events", (route) =>
+      route.fulfill({ json: { events: exampleEvents } }),
+    )
+    await page.goto(`${baseUrl}clinician`)
+    await shoot(page, "08-clinician", "Seizure Diary events")
     await browser.close()
 
     // The microphone is blocked.
@@ -97,8 +144,11 @@ async function main() {
   console.log(`Screenshots saved to ${OUT_DIR}/`)
 }
 
-async function newPage(browser: Awaited<ReturnType<typeof chromium.launch>>) {
-  const page = await browser.newPage({ viewport: VIEWPORT, deviceScaleFactor: 2 })
+async function newPage(
+  browser: Awaited<ReturnType<typeof chromium.launch>>,
+  viewport = VIEWPORT,
+) {
+  const page = await browser.newPage({ viewport, deviceScaleFactor: 2 })
   // Serve a few seconds of silence as the recording, so the player has a length.
   await page.route("**/api/recordings/**", (route) =>
     route.fulfill({ contentType: "audio/wav", body: silentWav(6) }),

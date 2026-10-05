@@ -2,6 +2,7 @@ import OpenAI from "openai"
 import { z } from "zod"
 import { createDraftEvent } from "../src/lib/draft"
 import type { ExtractedEvent, ProcessResponse } from "../src/types"
+import { listEvents, saveEvent } from "./events"
 import { extractEvent } from "./extract"
 
 // OpenAI's limit for audio uploads.
@@ -13,6 +14,16 @@ export default {
 
     if (request.method === "POST" && url.pathname === "/api/process") {
       return processRecording(request, env)
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/events") {
+      return saveEvent(request, env)
+    }
+    if (request.method === "GET" && url.pathname === "/api/events") {
+      return listEvents(env, "json")
+    }
+    if (request.method === "GET" && url.pathname === "/api/events.csv") {
+      return listEvents(env, "csv")
     }
 
     const recording = url.pathname.match(/^\/api\/recordings\/([\w-]+\.\w+)$/)

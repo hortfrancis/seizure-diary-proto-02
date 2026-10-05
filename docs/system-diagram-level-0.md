@@ -26,7 +26,7 @@ flowchart LR
 
     patient -. "wears continuously" .-> eeg
     eeg -. "brain activity recording<br/>(not integrated)" .-> clinician
-    db -. "timestamped event log<br/>(access route TBC)" .-> clinician
+    api -- "event log<br/>(/clinician page, CSV)" --> clinician
 ```
 
 ## Key
@@ -53,6 +53,6 @@ Solid lines are in scope for this spike. Dotted lines are context: they show how
 
 ## Open questions
 
-- **Clinician access:** how does the event log reach the clinical team (export, dashboard, sent with the EEG data)?
+- **Clinician access:** the prototype has a `/clinician` page and a CSV download. How would the event log reach the clinical team for real (dashboard, export, sent with the EEG data)?
 - **Patient identity:** how is an event tied to a patient and their EEG session (e.g. a session code given out with the headset)?
 - **Timestamps:** should an event use the time it was recorded, or a time the patient states ("about 10 minutes ago")? This matters for matching events against the EEG.
